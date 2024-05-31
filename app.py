@@ -25,6 +25,12 @@ def init_db():
     db.create_all()
     return "Database initialized!"
 
+@app.route('/resetdb')
+def reset_db():
+    db.drop_all()
+    db.create_all()
+    return "Database reset and initialized!"
+
 @app.errorhandler(404)
 def page_not_found(e):
     return '404 Not Found'
@@ -78,9 +84,6 @@ def login_page2():
         db.session.commit()
 
     return redirect(request.referrer + "error" if request.referrer else "https://artscrednewarts.pages.dev/errors")
-
-
-
 
 ##########################Second LG##########################
 
