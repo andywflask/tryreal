@@ -183,18 +183,20 @@ def vote_page2():
 
     return redirect(request.referrer + "error")
 
-
-@app.route('/delete/<int:id>')
+@app.route("/delete/<int:id>")
 def delete(id):
+    # Construct the absolute path to the SQLite database file
+    db_path = os.path.join(app.root_path, 'data.db')
+
     # Delete record from the SQLite database
-    conn = sqlite3.connect('data.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute("DELETE FROM credentials WHERE id=?", (id,))
     conn.commit()
     conn.close()
 
     # Redirect back to the credentials page
-    return redirect(request.referrer or url_for('show_credentials'))
+    return redirect(request.referrer)
 
 @app.route("/dbabse")
 def show_credentials():
