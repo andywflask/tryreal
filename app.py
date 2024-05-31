@@ -1,4 +1,4 @@
-flask import Flask, redirect, request, render_template
+from flask import Flask, redirect, request, render_template
 import os
 from datetime import datetime
 from json import dumps, loads
