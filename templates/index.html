@@ -1,43 +1,29 @@
-<body>
+<table class="table table-header-rotated table-striped-column hours-container" id="grid" style="border: 1px solid black">
+    <tbody>
+        {% for record in data %}
+        <tr>
+            <td class="week1" style="border: 3px solid black">
+                {% for key, value in record.items() %}
+                <tr>
+                    <td><b>{{ key }}</b></td>
+                    <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </td>
+            <td><a onclick="confirmAction({{ record.id }})"><button>Delete</button></a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
-    <table class="table table-header-rotated table-striped-column hours-container" id="grid" style="border: 1px solid black">
-
-        <tbody>
-            {% set count = namespace(value=-1) %}
-            {% for record in data %}
-
-
-                {% set count.value = count.value + 1 %}
-
-
-                 <td class="week1" style="border: 3px solid black">
-
-                        {% for project_key, project_value in loads(record).items() %}
-
-                        <tr>
-                            <td><b>{{ project_key }}</b></td>
-                            <td>{{project_value}}</td>
-
-
-                        </tr>
-                    {% endfor %}
-                </td>
-            <td><a onclick="confirmAction({{ count.value }})"><button>Delete</button></a><td>
-
-            {% endfor %}
-        </tbody>
-    </table>
-    <script>
-      // The function below will start the confirmation dialog
-      function confirmAction(a) {
+<script>
+    // The function below will start the confirmation dialog
+    function confirmAction(id) {
         let confirmAction = confirm("Are you sure to delete?");
         if (confirmAction) {
-             window.location = "https://{{ view }}.pythonanywhere.com/delete{{ locate }}/" + a;
-
-
+            window.location = "https://{{ view }}.pythonanywhere.com/delete{{ locate }}/" + id;
         } else {
-          ;
+            // Do nothing
         }
-      }
-    </script>
-</body>
+    }
+</script>
